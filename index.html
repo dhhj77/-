@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>2지역 신앙습관 마스터</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Pretendard / Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFF9F5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #F3C5C5;
+      border-radius: 9999px;
+    }
+    button, select, input, textarea {
+      touch-action: manipulation;
+    }
+    .custom-toast {
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideUp {
+      from { transform: translate(-50%, 20px); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
+    /* Soft Warm Blinking for Today */
+    @keyframes todayGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 2px #FB7185, 0 4px 14px -1px rgba(251, 113, 133, 0.35);
+        border-color: #FB7185;
+      }
+      50% {
+        box-shadow: 0 0 0 3px #F43F5E, 0 6px 18px 2px rgba(244, 63, 94, 0.45);
+        border-color: #F43F5E;
+      }
+    }
+    .today-pulse-card {
+      animation: todayGlow 1.8s infinite ease-in-out;
+    }
+
+    @keyframes todayBadgeBlink {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.85;
+        transform: scale(1.06);
+      }
+    }
+    .today-badge-blink {
+      animation: todayBadgeBlink 1.8s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-[#F6EFE9] text-stone-700 min-h-screen flex justify-center selection:bg-rose-200 selection:text-rose-900 antialiased">
+
+  <!-- Mobile Container: Cozy Pastel Aesthetic (Cream, Peach, Blush Rose, Soft Sage) -->
+  <div class="w-full max-w-md min-h-screen bg-[#FFFDFB] flex flex-col shadow-2xl relative border-x border-[#F0E6DE] pb-12">
+
+    <!-- Top Status Bar & Main Header -->
+    <header class="p-4 bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-[#F2E7DF]">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-rose-300 via-pink-200 to-amber-200 flex items-center justify-center shadow-sm shrink-0 border border-white/60">
+            <span class="text-lg">🌷</span>
+          </div>
+          <div>
+            <h1 class="text-base font-extrabold tracking-tight text-stone-800 flex items-center gap-1.5">
+              <span>2지역 신앙습관 마스터</span>
+              <span class="text-xs">✨</span>
+            </h1>
+            <p class="text-[11px] text-rose-500 font-medium">3분 말씀 · 성경묵상 · 기도 · 건강</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1.5 bg-rose-50 border border-rose-200/70 px-2.5 py-1 rounded-full shrink-0 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+          <span class="text-[10px] text-rose-600 font-semibold tracking-tight">마스터 온 ON</span>
+        </div>
+      </div>
+
+      <!-- User Info & Action Bar (Cleaned up: Excel, Capture, Backup removed) -->
+      <div class="flex items-center justify-between gap-1.5 text-xs pt-1">
+        <!-- Current User Button -->
+        <button onclick="openProfileModal()" class="flex items-center gap-1.5 bg-[#FFF4F0] hover:bg-[#FFEAE2] active:scale-95 transition px-3 py-1.5 rounded-full border border-rose-200/80 shadow-sm shrink-0">
+          <span class="text-sm">🐰</span>
+          <span id="currentUserNameText" class="font-bold text-stone-700">곽도현님</span>
+          <i data-lucide="edit-3" class="w-3 h-3 text-rose-400"></i>
+        </button>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="openMemberModal()" class="flex items-center gap-1 bg-stone-100 hover:bg-stone-200 active:scale-95 transition text-stone-600 px-3 py-1.5 rounded-full border border-stone-200 font-semibold text-xs shadow-sm">
+            <span>👥</span> 회원관리
+          </button>
+          <button onclick="handleLogout()" class="text-[11px] bg-rose-100/70 hover:bg-rose-200/80 text-rose-600 font-semibold px-2.5 py-1.5 rounded-full border border-rose-200 transition active:scale-95">
+            로그아웃
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs: Pastel Pill Design -->
+      <nav class="grid grid-cols-4 gap-1.5 mt-3.5 bg-[#F9F4F0] p-1.5 rounded-2xl border border-[#EDE2D8] shadow-inner">
+        <button id="tabBtn-habits" onclick="switchTab('habits')" class="tab-btn py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all text-white bg-rose-400 shadow-md">
+          <span>🌿</span> 신앙습관
+        </button>
+        <button id="tabBtn-ranking" onclick="switchTab('ranking')" class="tab-btn py-2 text-xs font-medium rounded-xl flex items-center justify-center gap-1 transition-all text-stone-500 hover:text-stone-800">
+          <span>🏆</span> 랭킹
+        </button>
+        <button id="tabBtn-report" onclick="switchTab('report')" class="tab-btn py-2 text-xs font-medium rounded-xl flex items-center justify-center gap-1 transition-all text-stone-500 hover:text-stone-800">
+          <span>🍰</span> 리포트
+        </button>
+        <button id="tabBtn-board" onclick="switchTab('board')" class="tab-btn py-2 text-xs font-medium rounded-xl flex items-center justify-center gap-1 transition-all text-stone-500 hover:text-stone-800">
+          <span>💌</span> 나눔터
+        </button>
+      </nav>
+    </header>
+
+    <!-- MAIN VIEW AREA -->
+    <main class="flex-1 p-3.5 space-y-4">
+
+      <!-- ================= TAB 1: 신앙습관 (HABITS) ================= -->
+      <section id="view-habits" class="space-y-3.5">
+        
+        <!-- Pastel Calendar Card -->
+        <div class="bg-white rounded-3xl p-3.5 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-[#F3E8E1]">
+          <!-- Calendar Header -->
+          <div class="flex items-center justify-between mb-3 px-1">
+            <div class="flex items-center gap-1.5">
+              <button onclick="changeMonth(-1)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-rose-50 text-stone-500 active:scale-95 transition">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <h2 id="calendarTitle" class="text-sm font-extrabold text-stone-800 flex items-center gap-1">
+                🌸 2026년 11월
+              </h2>
+              <button onclick="changeMonth(1)" class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-rose-50 text-stone-500 active:scale-95 transition">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div class="bg-rose-50 border border-rose-200/60 px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+              <span class="text-[10.5px] font-bold text-rose-500">✨ 날짜 터치 후 아래서 체크</span>
+            </div>
+          </div>
+
+          <!-- Calendar Days Header -->
+          <div class="grid grid-cols-7 text-center text-xs font-semibold pb-2 border-b border-[#F7EFE9]">
+            <div class="text-rose-400">일</div>
+            <div class="text-stone-500">월</div>
+            <div class="text-stone-500">화</div>
+            <div class="text-stone-500">수</div>
+            <div class="text-stone-500">목</div>
+            <div class="text-stone-500">금</div>
+            <div class="text-sky-400">토</div>
+          </div>
+
+          <!-- Calendar Month Grid -->
+          <div id="calendarGrid" class="grid grid-cols-7 gap-1 pt-2">
+            <!-- Dynamic calendar cell generation -->
+          </div>
+        </div>
+
+        <!-- Bottom Check Panel -->
+        <div class="bg-white rounded-3xl p-4 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-[#F3E8E1] space-y-3.5">
+          
+          <div class="flex items-center justify-between pb-1 border-b border-stone-100">
+            <div>
+              <h3 class="text-xs font-extrabold text-stone-800 flex items-center gap-1">
+                <span class="text-rose-400">🎀</span>
+                <span id="checkPanelTargetName" class="text-rose-500 font-bold">곽도현</span>님의 
+                <span id="checkPanelDate" class="text-stone-600 font-semibold">2026-11-24</span> 체크
+              </h3>
+            </div>
+            <span class="text-[10px] font-bold text-rose-500 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/70">
+              오늘의 실천 터치
+            </span>
+          </div>
+
+          <!-- Target Selector for Managers -->
+          <div class="bg-[#FFF8F5] border border-rose-100 rounded-2xl p-2.5 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-stone-700">
+              <span>👑</span>
+              <span>체크 대상 구역원:</span>
+            </div>
+            <select id="targetMemberSelect" onchange="changeTargetMember(this.value)" class="text-xs font-bold bg-white border border-rose-200 rounded-xl px-2.5 py-1 text-stone-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-300">
+              <!-- dynamic members options -->
+            </select>
+          </div>
+
+          <!-- 4 Updated Habit Toggle Buttons: 3분 말씀, 성경묵상, 기도, 건강 (Pastel aesthetic) -->
+          <div class="grid grid-cols-4 gap-2">
+            <!-- 3분 말씀 -->
+            <button id="toggle-word" onclick="toggleHabit('word')" class="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-stone-200/70 bg-[#FFFDFD] transition active:scale-95 shadow-sm">
+              <span class="text-base mb-0.5">📖</span>
+              <span class="text-[11px] font-bold text-stone-700 leading-tight">3분 말씀</span>
+              <span id="status-word" class="text-[10px] font-medium text-stone-400 mt-0.5">미달성</span>
+            </button>
+
+            <!-- 성경묵상 -->
+            <button id="toggle-meditation" onclick="toggleHabit('meditation')" class="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-stone-200/70 bg-[#FFFDFD] transition active:scale-95 shadow-sm">
+              <span class="text-base mb-0.5">🌿</span>
+              <span class="text-[11px] font-bold text-stone-700 leading-tight">성경묵상</span>
+              <span id="status-meditation" class="text-[10px] font-medium text-stone-400 mt-0.5">미달성</span>
+            </button>
+
+            <!-- 기도 -->
+            <button id="toggle-prayer" onclick="toggleHabit('prayer')" class="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-stone-200/70 bg-[#FFFDFD] transition active:scale-95 shadow-sm">
+              <span class="text-base mb-0.5">🕯️</span>
+              <span class="text-[11px] font-bold text-stone-700 leading-tight">기도</span>
+              <span id="status-prayer" class="text-[10px] font-medium text-stone-400 mt-0.5">미달성</span>
+            </button>
+
+            <!-- 건강 -->
+            <button id="toggle-health" onclick="toggleHabit('health')" class="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-stone-200/70 bg-[#FFFDFD] transition active:scale-95 shadow-sm">
+              <span class="text-base mb-0.5">🌸</span>
+              <span class="text-[11px] font-bold text-stone-700 leading-tight">건강</span>
+              <span id="status-health" class="text-[10px] font-medium text-stone-400 mt-0.5">미달성</span>
+            </button>
+          </div>
+
+          <!-- Daily Note / Reflection Input -->
+          <div class="flex items-center gap-2 pt-1">
+            <input type="text" id="dailyNoteInput" placeholder="오늘 감사한 점이나 한줄 묵상 ✨" class="flex-1 bg-[#FAF5F1] border border-stone-200 rounded-2xl px-3 py-2 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:bg-white transition" />
+            <button onclick="saveDailyNote()" class="bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-2xl shadow-sm transition shrink-0">
+              저장
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= TAB 2: 순위 (RANKING) ================= -->
+      <section id="view-ranking" class="hidden space-y-3.5">
+        <div class="bg-white rounded-3xl p-4 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-[#F3E8E1] space-y-4">
+          <!-- Leaderboard Header -->
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[10px] tracking-wider text-rose-400 font-bold uppercase">Monthly Bloom Board</p>
+              <h2 class="text-base font-extrabold text-stone-800">2026년 11월 습관 랭킹 🌷</h2>
+            </div>
+            <div class="flex items-center gap-1 bg-[#FBF5F0] px-2.5 py-1 rounded-full border border-stone-200">
+              <button class="text-stone-400 hover:text-stone-700 p-0.5"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+              <span class="text-xs font-bold text-stone-700">11월</span>
+              <button class="text-stone-400 hover:text-stone-700 p-0.5"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+
+          <!-- Filter buttons -->
+          <div class="grid grid-cols-2 gap-2 p-1.5 bg-[#FAF5F0] rounded-2xl border border-stone-200/80">
+            <button id="rankFilterMonthly" onclick="setRankingFilter('monthly')" class="py-1.5 rounded-xl text-xs font-bold bg-white text-rose-500 shadow-sm transition">
+              이번 달 순위
+            </button>
+            <button id="rankFilterAll" onclick="setRankingFilter('all')" class="py-1.5 rounded-xl text-xs font-semibold text-stone-500 hover:text-stone-800 transition">
+              전체 누적
+            </button>
+          </div>
+
+          <!-- Info Notice -->
+          <div class="bg-[#FFF9F6] border border-rose-100 p-3 rounded-2xl flex items-start gap-2">
+            <span class="text-sm mt-0.5">💌</span>
+            <p class="text-[11px] leading-relaxed text-stone-600">
+              구역원들과 함께 따뜻하게 응원하며 매일의 영생 습관을 채워가요. 매월 1일에 새롭게 시작됩니다.
+            </p>
+          </div>
+
+          <!-- Leaderboard List -->
+          <div id="leaderboardList" class="space-y-2 pt-1">
+            <!-- Dynamic Member Rank Items -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: 현황판 (REPORT) ================= -->
+      <section id="view-report" class="hidden space-y-3.5">
+        <div class="bg-white rounded-3xl p-4 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-[#F3E8E1] space-y-4">
+          <!-- Report Header -->
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[10px] tracking-wider text-rose-400 font-bold uppercase">My Habit Report</p>
+              <h2 class="text-base font-extrabold text-stone-800">11월 활동 리포트 🍰</h2>
+            </div>
+            <div class="flex items-center gap-1 bg-[#FBF5F0] px-2.5 py-1 rounded-full border border-stone-200">
+              <span class="text-xs font-bold text-stone-700">11월</span>
+            </div>
+          </div>
+
+          <!-- Personal Summary Box -->
+          <div class="bg-[#FFF9F6] border border-rose-100 p-4 rounded-3xl space-y-3.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-extrabold text-stone-700 flex items-center gap-1.5">
+                <span>🌱</span> <span id="reportUserName" class="text-rose-500">곽도현</span>님의 신앙 성취율
+              </span>
+              <span id="reportTotalRate" class="font-extrabold text-rose-500">0% 실천 (0/120)</span>
+            </div>
+
+            <!-- Main Gradient Progress Bar (Warm Peach & Rose) -->
+            <div class="w-full bg-rose-100/60 rounded-full h-3 overflow-hidden p-0.5">
+              <div id="reportProgressBar" class="h-full bg-gradient-to-r from-rose-300 via-pink-400 to-amber-300 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+
+            <!-- Breakdown Grid for 4 habits -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <div class="bg-white p-3 rounded-2xl border border-rose-100 shadow-sm">
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-stone-700 font-semibold flex items-center gap-1">📖 3분 말씀</span>
+                  <span id="reportWordCount" class="font-bold text-rose-500">0회 (0%)</span>
+                </div>
+                <div class="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                  <div id="reportWordBar" class="bg-indigo-300 h-full rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded-2xl border border-rose-100 shadow-sm">
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-stone-700 font-semibold flex items-center gap-1">🌿 성경묵상</span>
+                  <span id="reportMeditationCount" class="font-bold text-emerald-600">0회 (0%)</span>
+                </div>
+                <div class="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                  <div id="reportMeditationBar" class="bg-emerald-400 h-full rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded-2xl border border-rose-100 shadow-sm">
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-stone-700 font-semibold flex items-center gap-1">🕯️ 기도</span>
+                  <span id="reportPrayerCount" class="font-bold text-amber-500">0회 (0%)</span>
+                </div>
+                <div class="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                  <div id="reportPrayerBar" class="bg-amber-300 h-full rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded-2xl border border-rose-100 shadow-sm">
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                  <span class="text-stone-700 font-semibold flex items-center gap-1">🌸 건강</span>
+                  <span id="reportHealthCount" class="font-bold text-rose-400">0회 (0%)</span>
+                </div>
+                <div class="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                  <div id="reportHealthBar" class="bg-rose-300 h-full rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Month Summary -->
+            <div class="bg-white border border-rose-200/80 p-3 rounded-2xl flex items-center justify-between text-xs shadow-sm">
+              <span class="text-stone-600 font-medium">이번 달 꽃피운 실천 수</span>
+              <span id="reportSummaryText" class="font-bold text-rose-500">총 0회 실천 (한달 30일 기준)</span>
+            </div>
+          </div>
+
+          <!-- Group Member Comparison -->
+          <div class="space-y-2.5 pt-2">
+            <h3 class="text-xs font-bold text-stone-700 flex items-center gap-1.5">
+              <span>🌸</span> 구역원별 실천 현황
+            </h3>
+            <div id="reportMemberList" class="space-y-2">
+              <!-- Dynamically populated comparison cards -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: 게시판 (BOARD) ================= -->
+      <section id="view-board" class="hidden space-y-3.5">
+        <div class="bg-white rounded-3xl p-4 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-[#F3E8E1] space-y-4">
+          <!-- Board Header -->
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-lg">💌</span>
+              <h2 class="text-base font-extrabold text-stone-800">마음 나눔 & 게시판</h2>
+            </div>
+            <p class="text-xs text-stone-500 mt-0.5">서로를 축복하고 은혜로운 묵상을 나누어요.</p>
+          </div>
+
+          <!-- Board Post Box -->
+          <div class="space-y-2 bg-[#FFF8F5] p-3.5 rounded-3xl border border-rose-100 shadow-sm">
+            <textarea id="boardInput" rows="3" placeholder="오늘 구역원들에게 전하고 싶은 따뜻한 한마디나 묵상을 적어주세요 💕" class="w-full bg-transparent text-xs text-stone-700 placeholder-stone-400 focus:outline-none resize-none"></textarea>
+            <div class="flex justify-end pt-1">
+              <button onclick="addPost()" class="bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 active:scale-95 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm transition">
+                등록하기
+              </button>
+            </div>
+          </div>
+
+          <!-- Board Feed -->
+          <div id="boardFeed" class="space-y-3 pt-1">
+            <!-- Dynamic Post Items -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Modal: 회원관리 (Member Management) -->
+    <div id="memberModal" class="hidden fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white border border-stone-200 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-stone-100 pb-3">
+          <h3 class="text-sm font-extrabold text-stone-800 flex items-center gap-1.5">
+            <span>👥</span> 구역원 회원관리
+          </h3>
+          <button onclick="closeMemberModal()" class="text-stone-400 hover:text-stone-700 p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Add member form with Password field -->
+        <div class="bg-[#FFF9F6] p-3.5 rounded-2xl border border-rose-100 space-y-2.5">
+          <p class="text-[11px] font-bold text-rose-500">➕ 새 구역원 추가</p>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="newMemberName" placeholder="아이디/이름" class="bg-white border border-stone-200 text-xs rounded-xl px-3 py-1.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+            <input type="text" id="newMemberPassword" placeholder="비밀번호" class="bg-white border border-stone-200 text-xs rounded-xl px-3 py-1.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="newMemberRole" class="flex-1 bg-white border border-stone-200 text-xs rounded-xl px-3 py-1.5 text-stone-700 focus:outline-none">
+              <option value="회원">구역원 (회원)</option>
+              <option value="관리자">관리자 (Admin)</option>
+            </select>
+            <button onclick="addNewMember()" class="bg-rose-400 hover:bg-rose-500 active:scale-95 text-white text-xs px-4 py-1.5 rounded-xl font-bold shadow-sm transition">
+              추가하기
+            </button>
+          </div>
+        </div>
+
+        <!-- Member List Container -->
+        <div class="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[160px]">
+          <p class="text-[11px] text-stone-500 font-semibold px-0.5">등록된 구역원 목록</p>
+          <div id="memberModalList" class="space-y-2">
+            <!-- Dynamically populated member row items -->
+          </div>
+        </div>
+
+        <div class="pt-2 text-right">
+          <button onclick="closeMemberModal()" class="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold py-2.5 rounded-2xl transition">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Change Profile / Login -->
+    <div id="profileModal" class="hidden fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white border border-stone-200 w-full max-w-xs rounded-3xl p-5 shadow-2xl space-y-3.5">
+        <h3 class="text-sm font-extrabold text-stone-800 flex items-center gap-1.5">
+          <span>🐰</span> 구역원 로그인
+        </h3>
+        <p class="text-xs text-stone-500">아이디와 비밀번호를 입력해주세요.</p>
+        
+        <div class="space-y-2.5">
+          <div>
+            <label class="text-[11px] font-semibold text-stone-600 block mb-1">아이디 (이름)</label>
+            <select id="loginUserSelect" class="w-full bg-[#FAF5F0] border border-stone-200 text-xs rounded-2xl p-2.5 text-stone-700 focus:outline-none focus:border-rose-300">
+              <!-- dynamic options -->
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-stone-600 block mb-1">비밀번호</label>
+            <input type="password" id="loginPasswordInput" placeholder="비밀번호 입력" class="w-full bg-[#FAF5F0] border border-stone-200 text-xs rounded-2xl p-2.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button onclick="closeProfileModal()" class="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-600 font-medium text-xs py-2.5 rounded-2xl">
+            취소
+          </button>
+          <button onclick="handleLoginSubmit()" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-bold py-2.5 rounded-2xl shadow-sm">
+            로그인
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toastNotification" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 custom-toast bg-stone-800/90 backdrop-blur-md text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2">
+      <span id="toastIcon">🌸</span>
+      <span id="toastMessage">메시지 내용</span>
+    </div>
+
+  </div>
+
+  <!-- APPLICATION LOGIC SCRIPT -->
+  <script>
+    // --- Initial State and Data Setup ---
+    const DEFAULT_MEMBERS = [
+      { id: 'm_kwak', username: '곽도현', name: '곽도현', role: '관리자', password: '1234' },
+      { id: 'm_kim_gh', username: '김가현', name: '김가현', role: '관리자', password: '380401' },
+      { id: 'm_lee_yj', username: '이여진', name: '이여진', role: '회원', password: '1111' },
+      { id: 'm_kim_mj', username: '김명주', name: '김명주', role: '회원', password: '1111' },
+      { id: 'm_kim_sh', username: '김선화', name: '김선화', role: '회원', password: '1111' },
+      { id: 'm_kim_gy', username: '김가영', name: '김가영', role: '회원', password: '1111' },
+      { id: 'm_cho_ji', username: '조지인', name: '조지인', role: '회원', password: '1111' },
+      { id: 'm_yoon_jw', username: '윤재원', name: '윤재원', role: '회원', password: '1111' },
+      { id: 'm_choi_ys', username: '최윤수', name: '최윤수', role: '회원', password: '1111' }
+    ];
+
+    const DEFAULT_RECORDS = {
+      'm_kwak_2026-11-18': { word: true, meditation: true, prayer: true, health: true, note: '수요 예배 및 3분 말씀 묵상' },
+      'm_kwak_2026-11-20': { word: true, meditation: true, prayer: true, health: false, note: '금요 성경묵상과 기도 실천' },
+      'm_kwak_2026-11-21': { word: true, meditation: true, prayer: true, health: false, note: '말씀통독 및 기도' },
+      'm_kwak_2026-11-22': { word: true, meditation: true, prayer: false, health: false, note: '주일 말씀과 묵상' },
+      'm_kim_gh_2026-11-24': { word: true, meditation: true, prayer: true, health: false, note: '오늘 말씀과 기도 완수' }
+    };
+
+    const DEFAULT_POSTS = [
+      {
+        id: 'p1',
+        author: '곽도현',
+        role: '관리자',
+        date: '2026.11.24 14:15',
+        content: '2지역 구역원 여러분, 환영합니다! 오늘도 [3분 말씀, 성경묵상, 기도, 건강] 4대 신앙습관으로 행복한 하루 보내세요 🌷',
+        likes: 5
+      },
+      {
+        id: 'p2',
+        author: '김가현',
+        role: '관리자',
+        date: '2026.11.24 14:50',
+        content: '김가현 관리자입니다. 함께 매일의 은혜로운 습관을 차곡차곡 쌓아가요! 💕',
+        likes: 3
+      }
+    ];
+
+    const DATA_VERSION = 'v5_pastel_redesign';
+    if (localStorage.getItem('habit_data_version') !== DATA_VERSION) {
+      localStorage.setItem('habit_members', JSON.stringify(DEFAULT_MEMBERS));
+      localStorage.setItem('habit_records', JSON.stringify(DEFAULT_RECORDS));
+      localStorage.setItem('habit_posts', JSON.stringify(DEFAULT_POSTS));
+      localStorage.setItem('habit_currentUserId', 'm_kwak');
+      localStorage.setItem('habit_data_version', DATA_VERSION);
+    }
+
+    let members = JSON.parse(localStorage.getItem('habit_members')) || DEFAULT_MEMBERS;
+    let records = JSON.parse(localStorage.getItem('habit_records')) || DEFAULT_RECORDS;
+    let posts = JSON.parse(localStorage.getItem('habit_posts')) || DEFAULT_POSTS;
+
+    let currentUserId = localStorage.getItem('habit_currentUserId') || 'm_kwak';
+    let targetMemberId = currentUserId;
+    let selectedDate = '2026-11-24';
+    let calendarYear = 2026;
+    let calendarMonth = 11;
+    let rankingMode = 'monthly';
+
+    function saveStorage() {
+      localStorage.setItem('habit_members', JSON.stringify(members));
+      localStorage.setItem('habit_records', JSON.stringify(records));
+      localStorage.setItem('habit_posts', JSON.stringify(posts));
+      localStorage.setItem('habit_currentUserId', currentUserId);
+    }
+
+    function showToast(message, icon = '🌸') {
+      const toast = document.getElementById('toastNotification');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+      toastMsg.innerText = message;
+      toastIcon.innerText = icon;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2400);
+    }
+
+    // --- Tab Switching ---
+    function switchTab(tabId) {
+      const views = ['habits', 'ranking', 'report', 'board'];
+      views.forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        const btnEl = document.getElementById(`tabBtn-${v}`);
+        if (v === tabId) {
+          viewEl.classList.remove('hidden');
+          btnEl.className = "tab-btn py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all text-white bg-rose-400 shadow-sm";
+        } else {
+          viewEl.classList.add('hidden');
+          btnEl.className = "tab-btn py-2 text-xs font-medium rounded-xl flex items-center justify-center gap-1 transition-all text-stone-500 hover:text-stone-800";
+        }
+      });
+
+      if (tabId === 'ranking') renderLeaderboard();
+      if (tabId === 'report') renderReport();
+      if (tabId === 'board') renderBoard();
+    }
+
+    function getCurrentUser() {
+      return members.find(m => m.id === currentUserId) || members[0];
+    }
+
+    function getTargetMember() {
+      return members.find(m => m.id === targetMemberId) || getCurrentUser();
+    }
+
+    function updateHeaderUser() {
+      const u = getCurrentUser();
+      document.getElementById('currentUserNameText').innerText = `${u.name}님`;
+      const select = document.getElementById('targetMemberSelect');
+      select.innerHTML = '';
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.innerText = `${m.name} (${m.role})`;
+        if (m.id === targetMemberId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function changeTargetMember(newId) {
+      targetMemberId = newId;
+      document.getElementById('checkPanelTargetName').innerText = getTargetMember().name;
+      renderCalendar();
+      updateCheckPanel();
+      showToast(`${getTargetMember().name}님의 기록으로 전환되었습니다.`, '🐰');
+    }
+
+    // --- Calendar Generation ---
+    function renderCalendar() {
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+      document.getElementById('calendarTitle').innerText = `🌸 ${calendarYear}년 ${calendarMonth}월`;
+
+      const firstDayIndex = new Date(calendarYear, calendarMonth - 1, 1).getDay();
+      const totalDays = new Date(calendarYear, calendarMonth, 0).getDate();
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const empty = document.createElement('div');
+        empty.className = "min-h-[66px] bg-[#FAF5F1]/50 rounded-xl";
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dayStr = String(day).padStart(2, '0');
+        const monthStr = String(calendarMonth).padStart(2, '0');
+        const dateKey = `${calendarYear}-${monthStr}-${dayStr}`;
+        const recordKey = `${targetMemberId}_${dateKey}`;
+        const record = records[recordKey] || { word: false, meditation: false, prayer: false, health: false };
+
+        const isToday = (calendarYear === 2026 && calendarMonth === 11 && day === 24);
+        const isSelected = (dateKey === selectedDate);
+
+        const count = (record.word ? 1 : 0) + (record.meditation ? 1 : 0) + (record.prayer ? 1 : 0) + (record.health ? 1 : 0);
+
+        const dayCol = (firstDayIndex + day - 1) % 7;
+        let dayColor = "text-stone-700";
+        if (dayCol === 0) dayColor = "text-rose-500 font-bold";
+        if (dayCol === 6) dayColor = "text-sky-500 font-bold";
+
+        const cell = document.createElement('div');
+        cell.className = `relative flex flex-col justify-between p-1 rounded-2xl min-h-[70px] cursor-pointer transition select-none ${
+          isToday 
+            ? 'today-pulse-card bg-rose-50/70 border-2 border-rose-400 shadow-sm' 
+            : isSelected 
+              ? 'ring-2 ring-rose-400 bg-rose-50/40 border border-rose-200 shadow-sm' 
+              : 'bg-[#FFFDFB] hover:bg-rose-50/30 border border-stone-100'
+        }`;
+
+        cell.onclick = () => {
+          selectedDate = dateKey;
+          renderCalendar();
+          updateCheckPanel();
+        };
+
+        let topBarHtml = `
+          <div class="flex items-center justify-between text-[11px] font-bold ${dayColor} px-1">
+            <span class="text-xs">${day}</span>
+            <div class="flex items-center gap-1">
+              ${isToday ? `<span class="today-badge-blink whitespace-nowrap bg-rose-400 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold shadow-sm inline-block leading-normal">오늘</span>` : ''}
+              ${count > 0 ? `<span class="text-[9px] text-rose-500 font-extrabold leading-none">★${count}</span>` : ''}
+            </div>
+          </div>
+        `;
+
+        // Soft pastel habit chips
+        const wordBadge = record.word 
+          ? `<span class="text-[8.5px] font-bold text-white bg-indigo-400 rounded-md px-0.5 py-0.2 text-center leading-tight">3분말씀</span>` 
+          : `<span class="text-[8.5px] text-stone-300 font-medium text-center leading-tight">3분말씀</span>`;
+
+        const medBadge = record.meditation 
+          ? `<span class="text-[8.5px] font-bold text-white bg-emerald-400 rounded-md px-0.5 py-0.2 text-center leading-tight">성경묵상</span>` 
+          : `<span class="text-[8.5px] text-stone-300 font-medium text-center leading-tight">성경묵상</span>`;
+
+        const prayerBadge = record.prayer 
+          ? `<span class="text-[8.5px] font-bold text-white bg-amber-400 rounded-md px-0.5 py-0.2 text-center leading-tight">기도</span>` 
+          : `<span class="text-[8.5px] text-stone-300 font-medium text-center leading-tight">기도</span>`;
+
+        const healthBadge = record.health 
+          ? `<span class="text-[8.5px] font-bold text-white bg-rose-400 rounded-md px-0.5 py-0.2 text-center leading-tight">건강</span>` 
+          : `<span class="text-[8.5px] text-stone-300 font-medium text-center leading-tight">건강</span>`;
+
+        cell.innerHTML = `
+          ${topBarHtml}
+          <div class="flex flex-col gap-0.5 mt-0.5">
+            ${wordBadge}
+            ${medBadge}
+            ${prayerBadge}
+            ${healthBadge}
+          </div>
+        `;
+
+        grid.appendChild(cell);
+      }
+    }
+
+    function changeMonth(delta) {
+      calendarMonth += delta;
+      if (calendarMonth < 1) {
+        calendarMonth = 12;
+        calendarYear--;
+      } else if (calendarMonth > 12) {
+        calendarMonth = 1;
+        calendarYear++;
+      }
+      renderCalendar();
+      updateCheckPanel();
+    }
+
+    // --- Bottom Check Panel Logic ---
+    function updateCheckPanel() {
+      document.getElementById('checkPanelDate').innerText = selectedDate;
+      document.getElementById('checkPanelTargetName').innerText = getTargetMember().name;
+
+      const recordKey = `${targetMemberId}_${selectedDate}`;
+      const record = records[recordKey] || { word: false, meditation: false, prayer: false, health: false, note: '' };
+
+      updateToggleButton('word', record.word, 'bg-indigo-400');
+      updateToggleButton('meditation', record.meditation, 'bg-emerald-400');
+      updateToggleButton('prayer', record.prayer, 'bg-amber-400');
+      updateToggleButton('health', record.health, 'bg-rose-400');
+
+      document.getElementById('dailyNoteInput').value = record.note || '';
+    }
+
+    function updateToggleButton(habitKey, isAchieved, activeBg) {
+      const btn = document.getElementById(`toggle-${habitKey}`);
+      const status = document.getElementById(`status-${habitKey}`);
+
+      if (isAchieved) {
+        btn.className = `flex flex-col items-center justify-center p-2.5 rounded-2xl border border-transparent ${activeBg} text-white shadow-md active:scale-95 transition`;
+        status.innerText = "달성 완료 ✨";
+        status.className = "text-[10px] font-bold text-white mt-0.5";
+      } else {
+        btn.className = `flex flex-col items-center justify-center p-2.5 rounded-2xl border border-stone-200/80 bg-white active:scale-95 transition text-stone-700 shadow-sm`;
+        status.innerText = "미달성";
+        status.className = "text-[10px] font-medium text-stone-400 mt-0.5";
+      }
+    }
+
+    function toggleHabit(habitKey) {
+      const recordKey = `${targetMemberId}_${selectedDate}`;
+      if (!records[recordKey]) {
+        records[recordKey] = { word: false, meditation: false, prayer: false, health: false, note: '' };
+      }
+      records[recordKey][habitKey] = !records[recordKey][habitKey];
+      saveStorage();
+      renderCalendar();
+      updateCheckPanel();
+
+      const habitLabels = { word: '3분 말씀', meditation: '성경묵상', prayer: '기도', health: '건강' };
+      const statusStr = records[recordKey][habitKey] ? '달성 완료!' : '취소되었습니다.';
+      showToast(`${habitLabels[habitKey]} ${statusStr}`, records[recordKey][habitKey] ? '🌸' : '⚪');
+    }
+
+    function saveDailyNote() {
+      const noteVal = document.getElementById('dailyNoteInput').value.trim();
+      const recordKey = `${targetMemberId}_${selectedDate}`;
+      if (!records[recordKey]) {
+        records[recordKey] = { word: false, meditation: false, prayer: false, health: false, note: '' };
+      }
+      records[recordKey].note = noteVal;
+      saveStorage();
+      showToast('소중한 묵상이 저장되었어요 🌷', '💾');
+    }
+
+    // --- Leaderboard Logic ---
+    function calculateMemberStats(memberId) {
+      let wordCount = 0;
+      let meditationCount = 0;
+      let prayerCount = 0;
+      let healthCount = 0;
+
+      Object.keys(records).forEach(key => {
+        if (key.startsWith(`${memberId}_2026-11`)) {
+          const rec = records[key];
+          if (rec.word) wordCount++;
+          if (rec.meditation) meditationCount++;
+          if (rec.prayer) prayerCount++;
+          if (rec.health) healthCount++;
+        }
+      });
+
+      const total = wordCount + meditationCount + prayerCount + healthCount;
+      return { total, wordCount, meditationCount, prayerCount, healthCount };
+    }
+
+    function setRankingFilter(filter) {
+      rankingMode = filter;
+      const monthlyBtn = document.getElementById('rankFilterMonthly');
+      const allBtn = document.getElementById('rankFilterAll');
+      if (filter === 'monthly') {
+        monthlyBtn.className = "py-1.5 rounded-xl text-xs font-bold bg-white text-rose-500 shadow-sm transition";
+        allBtn.className = "py-1.5 rounded-xl text-xs font-semibold text-stone-500 hover:text-stone-800 transition";
+      } else {
+        monthlyBtn.className = "py-1.5 rounded-xl text-xs font-semibold text-stone-500 hover:text-stone-800 transition";
+        allBtn.className = "py-1.5 rounded-xl text-xs font-bold bg-white text-rose-500 shadow-sm transition";
+      }
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const listEl = document.getElementById('leaderboardList');
+      listEl.innerHTML = '';
+
+      const ranked = members.map(m => {
+        const stats = calculateMemberStats(m.id);
+        return { ...m, score: stats.total };
+      });
+
+      ranked.sort((a, b) => b.score - a.score);
+
+      ranked.forEach((m, idx) => {
+        const rank = idx + 1;
+        let rankBadge = `<span class="text-xs font-bold text-stone-400 w-5 text-center">${rank}위</span>`;
+        if (rank === 1) rankBadge = `<span class="text-base">👑</span>`;
+        if (rank === 2) rankBadge = `<span class="text-base">💖</span>`;
+        if (rank === 3) rankBadge = `<span class="text-base">🌸</span>`;
+
+        const isMe = (m.id === currentUserId);
+        const roleBadge = m.role === '관리자' 
+          ? `<span class="text-[10px] font-bold bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full">관리자</span>`
+          : `<span class="text-[10px] font-medium bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full">회원</span>`;
+
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between p-3.5 rounded-2xl bg-[#FFFDFB] border border-stone-200/70 transition shadow-sm ${
+          isMe ? 'ring-1.5 ring-rose-400 bg-rose-50/30' : ''
+        }`;
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center w-6">
+              ${rankBadge}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-stone-800">${m.name}</span>
+              ${roleBadge}
+              ${isMe ? `<span class="text-[9px] bg-rose-400 text-white px-1.5 py-0.2 rounded-full font-bold">나</span>` : ''}
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-extrabold text-rose-500">${m.score}</span>
+            <span class="text-xs text-stone-400 ml-0.5">회 달성</span>
+          </div>
+        `;
+
+        listEl.appendChild(row);
+      });
+    }
+
+    // --- Report Logic ---
+    function renderReport() {
+      const u = getCurrentUser();
+      document.getElementById('reportUserName').innerText = u.name;
+      const stats = calculateMemberStats(u.id);
+
+      const totalPossible = 120;
+      const pct = Math.round((stats.total / totalPossible) * 100);
+
+      document.getElementById('reportTotalRate').innerText = `${pct}% 달성 (${stats.total}/${totalPossible})`;
+      document.getElementById('reportProgressBar').style.width = `${Math.min(pct, 100)}%`;
+
+      const wordPct = Math.round((stats.wordCount / 30) * 100);
+      const medPct = Math.round((stats.meditationCount / 30) * 100);
+      const prayerPct = Math.round((stats.prayerCount / 30) * 100);
+      const healthPct = Math.round((stats.healthCount / 30) * 100);
+
+      document.getElementById('reportWordCount').innerText = `${stats.wordCount}회 (${wordPct}%)`;
+      document.getElementById('reportWordBar').style.width = `${Math.min(wordPct, 100)}%`;
+
+      document.getElementById('reportMeditationCount').innerText = `${stats.meditationCount}회 (${medPct}%)`;
+      document.getElementById('reportMeditationBar').style.width = `${Math.min(medPct, 100)}%`;
+
+      document.getElementById('reportPrayerCount').innerText = `${stats.prayerCount}회 (${prayerPct}%)`;
+      document.getElementById('reportPrayerBar').style.width = `${Math.min(prayerPct, 100)}%`;
+
+      document.getElementById('reportHealthCount').innerText = `${stats.healthCount}회 (${healthPct}%)`;
+      document.getElementById('reportHealthBar').style.width = `${Math.min(healthPct, 100)}%`;
+
+      document.getElementById('reportSummaryText').innerText = `총 ${stats.total}회 실천 (한달 30일 기준)`;
+
+      const memberListEl = document.getElementById('reportMemberList');
+      memberListEl.innerHTML = '';
+
+      const ranked = members.map(m => {
+        const s = calculateMemberStats(m.id);
+        return { ...m, ...s };
+      }).sort((a, b) => b.total - a.total);
+
+      ranked.forEach((m, idx) => {
+        const isMe = (m.id === currentUserId);
+        const mPct = Math.round((m.total / 120) * 100);
+
+        const card = document.createElement('div');
+        card.className = `p-3.5 rounded-2xl bg-white border border-rose-100 space-y-2 shadow-sm ${
+          isMe ? 'ring-1.5 ring-rose-400 bg-rose-50/20' : ''
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-rose-400">${idx + 1}</span>
+              <span class="text-xs font-bold text-stone-800">${m.name}</span>
+              ${isMe ? `<span class="text-[9px] bg-rose-400 text-white px-1.5 py-0.2 rounded-full font-bold">나</span>` : ''}
+            </div>
+            <div>
+              <span class="text-xs font-bold text-rose-500">${m.total}회</span>
+              <span class="text-[11px] text-stone-400">(${mPct}%)</span>
+            </div>
+          </div>
+
+          <div class="w-full bg-stone-100 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-gradient-to-r from-rose-300 to-pink-400 h-full rounded-full" style="width: ${Math.min(mPct, 100)}%"></div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-1 text-[10px] text-center pt-0.5">
+            <div class="bg-[#FAF5F0] py-1 rounded-xl text-stone-600">말씀 <strong class="text-rose-500">${m.wordCount}</strong></div>
+            <div class="bg-[#FAF5F0] py-1 rounded-xl text-stone-600">묵상 <strong class="text-emerald-600">${m.meditationCount}</strong></div>
+            <div class="bg-[#FAF5F0] py-1 rounded-xl text-stone-600">기도 <strong class="text-amber-600">${m.prayerCount}</strong></div>
+            <div class="bg-[#FAF5F0] py-1 rounded-xl text-stone-600">건강 <strong class="text-rose-400">${m.healthCount}</strong></div>
+          </div>
+        `;
+
+        memberListEl.appendChild(card);
+      });
+    }
+
+    // --- Board Logic ---
+    function renderBoard() {
+      const feed = document.getElementById('boardFeed');
+      feed.innerHTML = '';
+
+      if (posts.length === 0) {
+        feed.innerHTML = `
+          <div class="text-center py-8 text-xs text-stone-400">
+            아직 작성된 나눔이 없어요.<br>오늘의 은혜를 첫 글로 남겨주세요 🌷
+          </div>
+        `;
+        return;
+      }
+
+      posts.forEach(p => {
+        const item = document.createElement('div');
+        item.className = "p-4 bg-white border border-rose-100 rounded-3xl space-y-2.5 shadow-sm";
+        
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-stone-800">${p.author}</span>
+              <span class="text-[9px] bg-rose-50 text-rose-500 px-2 py-0.5 rounded-full font-bold border border-rose-100">${p.role}</span>
+            </div>
+            <span class="text-[10px] text-stone-400">${p.date}</span>
+          </div>
+
+          <p class="text-xs text-stone-700 leading-relaxed break-words whitespace-pre-wrap">${p.content}</p>
+
+          <div class="flex items-center justify-between pt-1 border-t border-stone-100 text-xs">
+            <button onclick="likePost('${p.id}')" class="flex items-center gap-1.5 text-stone-400 hover:text-rose-500 transition active:scale-90">
+              <span class="text-sm">💖</span>
+              <span class="text-[11px] font-bold text-rose-500">${p.likes || 0}</span>
+            </button>
+            <button onclick="deletePost('${p.id}')" class="text-[11px] text-stone-400 hover:text-rose-500 transition">
+              삭제
+            </button>
+          </div>
+        `;
+        feed.appendChild(item);
+      });
+    }
+
+    function addPost() {
+      const input = document.getElementById('boardInput');
+      const val = input.value.trim();
+      if (!val) {
+        showToast('내용을 입력해주세요.', '💌');
+        return;
+      }
+
+      const u = getCurrentUser();
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      const newPost = {
+        id: 'p_' + Date.now(),
+        author: u.name,
+        role: u.role,
+        date: timeStr,
+        content: val,
+        likes: 0
+      };
+
+      posts.unshift(newPost);
+      input.value = '';
+      saveStorage();
+      renderBoard();
+      showToast('마음 나눔이 등록되었어요 💕', '💌');
+    }
+
+    function likePost(id) {
+      const post = posts.find(p => p.id === id);
+      if (post) {
+        post.likes = (post.likes || 0) + 1;
+        saveStorage();
+        renderBoard();
+      }
+    }
+
+    function deletePost(id) {
+      posts = posts.filter(p => p.id !== id);
+      saveStorage();
+      renderBoard();
+      showToast('나눔이 삭제되었습니다.', '🗑️');
+    }
+
+    // --- Member Management Modal ---
+    function openMemberModal() {
+      const currentUser = getCurrentUser();
+      if (currentUser.role !== '관리자') {
+        showToast('회원 관리는 관리자만 가능합니다.', '🔒');
+        return;
+      }
+      renderMemberModalList();
+      document.getElementById('memberModal').classList.remove('hidden');
+    }
+
+    function closeMemberModal() {
+      document.getElementById('memberModal').classList.add('hidden');
+      updateHeaderUser();
+      renderCalendar();
+      updateCheckPanel();
+    }
+
+    function renderMemberModalList() {
+      const listEl = document.getElementById('memberModalList');
+      listEl.innerHTML = '';
+
+      members.forEach(m => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2.5 rounded-2xl bg-[#FFF9F6] border border-rose-100";
+        row.innerHTML = `
+          <div class="flex flex-col gap-0.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-stone-800">${m.name}</span>
+              <span class="text-[10px] ${m.role === '관리자' ? 'text-rose-600 bg-rose-100' : 'text-stone-500 bg-stone-100'} px-2 py-0.2 rounded-full font-bold">${m.role}</span>
+            </div>
+            <div class="flex items-center gap-1 text-[11px] text-stone-500">
+              <span>비밀번호:</span>
+              <input type="text" value="${m.password || ''}" onchange="updateMemberPassword('${m.id}', this.value)" class="bg-white border border-stone-200 rounded-lg px-2 py-0.5 text-[11px] text-rose-500 font-bold w-20 focus:outline-none focus:border-rose-300" />
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="toggleMemberRole('${m.id}')" class="text-[10px] text-stone-600 hover:text-stone-900 bg-white border border-stone-200 px-2 py-1 rounded-xl transition font-medium">
+              권한
+            </button>
+            ${members.length > 1 ? `
+              <button onclick="removeMember('${m.id}')" class="text-[10px] text-rose-500 hover:text-rose-700 bg-rose-50 border border-rose-200 px-2 py-1 rounded-xl transition font-medium">
+                삭제
+              </button>
+            ` : ''}
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    function addNewMember() {
+      const currentUser = getCurrentUser();
+      if (currentUser.role !== '관리자') {
+        showToast('관리자만 구역원을 추가할 수 있습니다.', '⚠️');
+        return;
+      }
+
+      const nameInput = document.getElementById('newMemberName');
+      const pwInput = document.getElementById('newMemberPassword');
+      const roleSelect = document.getElementById('newMemberRole');
+      const name = nameInput.value.trim();
+      const pw = pwInput.value.trim();
+
+      if (!name) {
+        showToast('이름을 입력해주세요.', '⚠️');
+        return;
+      }
+
+      if (members.some(m => m.name === name)) {
+        showToast('이미 등록된 구역원 이름입니다.', '⚠️');
+        return;
+      }
+
+      const newId = 'm_' + Date.now();
+      members.push({ 
+        id: newId, 
+        username: name, 
+        name, 
+        role: roleSelect.value, 
+        password: pw || '1111' 
+      });
+
+      nameInput.value = '';
+      pwInput.value = '';
+      saveStorage();
+      renderMemberModalList();
+      updateHeaderUser();
+      showToast(`${name}님이 추가되었어요 🌸`, '👤');
+    }
+
+    function updateMemberPassword(id, newPw) {
+      const target = members.find(m => m.id === id);
+      if (target) {
+        target.password = newPw.trim();
+        saveStorage();
+        showToast(`${target.name}님의 비밀번호가 변경되었습니다.`, '🔑');
+      }
+    }
+
+    function toggleMemberRole(id) {
+      const m = members.find(item => item.id === id);
+      if (m) {
+        m.role = m.role === '관리자' ? '회원' : '관리자';
+        saveStorage();
+        renderMemberModalList();
+        updateHeaderUser();
+        showToast(`${m.name}님의 권한이 ${m.role}(으)로 변경되었습니다.`, '🔄');
+      }
+    }
+
+    function removeMember(id) {
+      if (members.length <= 1) {
+        showToast('최소 1명의 구역원이 필요합니다.', '⚠️');
+        return;
+      }
+      const target = members.find(m => m.id === id);
+      const targetName = target ? target.name : '';
+      members = members.filter(m => m.id !== id);
+      if (currentUserId === id) {
+        currentUserId = members[0].id;
+      }
+      if (targetMemberId === id) {
+        targetMemberId = currentUserId;
+      }
+      saveStorage();
+      renderMemberModalList();
+      updateHeaderUser();
+      renderCalendar();
+      updateCheckPanel();
+      showToast(`${targetName}님이 삭제되었습니다.`, '🗑️');
+    }
+
+    // --- Profile Switch Modal & Password Verification ---
+    function openProfileModal() {
+      const select = document.getElementById('loginUserSelect');
+      select.innerHTML = '';
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.innerText = `${m.name} (${m.role})`;
+        if (m.id === currentUserId) opt.selected = true;
+        select.appendChild(opt);
+      });
+      document.getElementById('loginPasswordInput').value = '';
+      document.getElementById('profileModal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    function handleLoginSubmit() {
+      const selectedId = document.getElementById('loginUserSelect').value;
+      const inputPw = document.getElementById('loginPasswordInput').value.trim();
+      const user = members.find(m => m.id === selectedId);
+
+      if (!user) {
+        showToast('사용자를 찾을 수 없습니다.', '⚠️');
+        return;
+      }
+
+      if (user.password && user.password !== inputPw) {
+        showToast('비밀번호가 일치하지 않아요 🔒', '⚠️');
+        return;
+      }
+
+      currentUserId = selectedId;
+      targetMemberId = currentUserId;
+      saveStorage();
+      closeProfileModal();
+      updateHeaderUser();
+      renderCalendar();
+      updateCheckPanel();
+      showToast(`${user.name}님 환영합니다! 🌷`, '🐰');
+    }
+
+    function handleLogout() {
+      showToast('로그아웃 되었습니다.', '👋');
+      openProfileModal();
+    }
+
+    // --- Window Init ---
+    window.onload = function() {
+      lucide.createIcons();
+      updateHeaderUser();
+      renderCalendar();
+      updateCheckPanel();
+    };
+  </script>
+</body>
+</html>
