@@ -42,19 +42,20 @@
       to { transform: translate(-50%, 0); opacity: 1; }
     }
 
-    /* Soft Warm Blinking for Today */
+    /* Soft Warm Blinking for Today - inner shadow so it never overflows adjacent cells */
     @keyframes todayGlow {
       0%, 100% {
-        box-shadow: 0 0 0 2px #FB7185, 0 4px 14px -1px rgba(251, 113, 133, 0.35);
+        box-shadow: inset 0 0 0 2px #FB7185;
         border-color: #FB7185;
       }
       50% {
-        box-shadow: 0 0 0 3px #F43F5E, 0 6px 18px 2px rgba(244, 63, 94, 0.45);
+        box-shadow: inset 0 0 0 2px #F43F5E;
         border-color: #F43F5E;
       }
     }
     .today-pulse-card {
       animation: todayGlow 1.8s infinite ease-in-out;
+      z-index: 5;
     }
 
     @keyframes todayBadgeBlink {
@@ -63,8 +64,8 @@
         transform: scale(1);
       }
       50% {
-        opacity: 0.85;
-        transform: scale(1.06);
+        opacity: 0.9;
+        transform: scale(1.02);
       }
     }
     .today-badge-blink {
@@ -172,7 +173,7 @@
           </div>
 
           <!-- Calendar Month Grid -->
-          <div id="calendarGrid" class="grid grid-cols-7 gap-1 pt-2">
+          <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 pt-2">
             <!-- Dynamic calendar cell generation -->
           </div>
         </div>
@@ -548,10 +549,17 @@
 
     let db = null;
     let isCloudConnected = false;
+    let hasLoadedRemoteData = false;
+    let saveTimeout = null;
+
     try {
       if (typeof firebase !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
+        // Enable offline persistence so data is never lost even with spotty network
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+          console.warn("Firestore persistence notice:", err.code);
+        });
       }
     } catch (e) {
       console.warn("Firebase initialization warning:", e);
@@ -588,31 +596,43 @@
 
     let currentUserId = localStorage.getItem('habit_currentUserId') || 'm_kwak';
     let targetMemberId = currentUserId;
-    let selectedDate = '2026-11-24';
-    let calendarYear = 2026;
-    let calendarMonth = 11;
+
+    // 현재 실제 날짜를 기본값으로 자동 설정 (한국 기준)
+    const _now = new Date();
+    const _nowYear = _now.getFullYear();
+    const _nowMonth = _now.getMonth() + 1;
+    const _nowDate = _now.getDate();
+    const _todayKey = `${_nowYear}-${String(_nowMonth).padStart(2, '0')}-${String(_nowDate).padStart(2, '0')}`;
+
+    let selectedDate = _todayKey;
+    let calendarYear = _nowYear;
+    let calendarMonth = _nowMonth;
     let rankingMode = 'monthly';
 
     function saveStorage() {
-      // 1. LocalStorage 저장 (오프라인 캐시)
+      // 1. LocalStorage 즉시 저장 (오프라인 캐시 및 무중단 유지)
       localStorage.setItem('habit_members', JSON.stringify(members));
       localStorage.setItem('habit_records', JSON.stringify(records));
       localStorage.setItem('habit_posts', JSON.stringify(posts));
       localStorage.setItem('habit_currentUserId', currentUserId);
 
-      // 2. Firebase Firestore 클라우드 동기화
+      // 2. Firebase Firestore 클라우드 안전 전송 (병합 merge: true 로 누락 방지)
       if (db) {
-        db.collection('habit_app').doc('main_data').set({
-          members: members,
-          records: records,
-          posts: posts,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(() => {
-          setCloudStatus(true, "클라우드 동기화 완료 ✨");
-        }).catch(err => {
-          console.warn("Firestore save error:", err);
-          setCloudStatus(false, "클라우드 저장 대기중");
-        });
+        setCloudStatus(false, "클라우드 저장중... ⏳");
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          db.collection('habit_app').doc('main_data').set({
+            members: members,
+            records: records,
+            posts: posts,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).then(() => {
+            setCloudStatus(true, "클라우드 저장 완료 ✨");
+          }).catch(err => {
+            console.warn("Firestore save error:", err);
+            setCloudStatus(false, "오프라인 보관됨 (재연결 시 자동 저장)");
+          });
+        }, 150);
       }
     }
 
@@ -626,12 +646,16 @@
       db.collection('habit_app').doc('main_data').onSnapshot((doc) => {
         if (doc.exists) {
           const data = doc.data();
+          hasLoadedRemoteData = true;
+
+          // 데이터 누락 방지: 기존 로컬 데이터와 원격 데이터를 안전하게 병합
           if (data.members && Array.isArray(data.members) && data.members.length > 0) {
             members = data.members;
             localStorage.setItem('habit_members', JSON.stringify(members));
           }
-          if (data.records) {
-            records = data.records;
+          if (data.records && typeof data.records === 'object') {
+            // 원격 기록과 로컬 기록 병합하여 체크 누락 원천 차단
+            records = Object.assign({}, records, data.records);
             localStorage.setItem('habit_records', JSON.stringify(records));
           }
           if (data.posts && Array.isArray(data.posts)) {
@@ -647,7 +671,8 @@
           if (currentTab === 'report') renderReport();
           if (currentTab === 'board') renderBoard();
         } else {
-          // 문서가 없으면 초기 데이터로 생성
+          // Firestore에 최초 문서 생성
+          hasLoadedRemoteData = true;
           saveStorage();
           setCloudStatus(true, "초기 클라우드 등록 완료 ✨");
         }
@@ -741,7 +766,7 @@
         const recordKey = `${targetMemberId}_${dateKey}`;
         const record = records[recordKey] || { word: false, meditation: false, prayer: false, health: false };
 
-        const isToday = (calendarYear === 2026 && calendarMonth === 11 && day === 24);
+        const isToday = (dateKey === _todayKey);
         const isSelected = (dateKey === selectedDate);
 
         const count = (record.word ? 1 : 0) + (record.meditation ? 1 : 0) + (record.prayer ? 1 : 0) + (record.health ? 1 : 0);
@@ -752,11 +777,11 @@
         if (dayCol === 6) dayColor = "text-sky-500 font-bold";
 
         const cell = document.createElement('div');
-        cell.className = `relative flex flex-col justify-between p-1 rounded-2xl min-h-[70px] cursor-pointer transition select-none ${
+        cell.className = `relative flex flex-col justify-between p-1 rounded-2xl min-h-[70px] cursor-pointer transition select-none overflow-hidden ${
           isToday 
-            ? 'today-pulse-card bg-rose-50/70 border-2 border-rose-400 shadow-sm' 
+            ? 'today-pulse-card bg-rose-50/70 border border-rose-400 shadow-sm' 
             : isSelected 
-              ? 'ring-2 ring-rose-400 bg-rose-50/40 border border-rose-200 shadow-sm' 
+              ? 'ring-1.5 ring-rose-400 bg-rose-50/40 border border-rose-200 shadow-sm' 
               : 'bg-[#FFFDFB] hover:bg-rose-50/30 border border-stone-100'
         }`;
 
@@ -769,9 +794,9 @@
         let topBarHtml = `
           <div class="flex items-center justify-between text-[11px] font-bold ${dayColor} px-1">
             <span class="text-xs">${day}</span>
-            <div class="flex items-center gap-1">
-              ${isToday ? `<span class="today-badge-blink whitespace-nowrap bg-rose-400 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold shadow-sm inline-block leading-normal">오늘</span>` : ''}
-              ${count > 0 ? `<span class="text-[9px] text-rose-500 font-extrabold leading-none">★${count}</span>` : ''}
+            <div class="flex items-center gap-1 shrink-0 overflow-hidden">
+              ${isToday ? `<span class="today-badge-blink whitespace-nowrap bg-rose-400 text-white text-[8.5px] px-1 py-0.2 rounded-full font-bold shadow-sm inline-block leading-tight">오늘</span>` : ''}
+              ${count > 0 ? `<span class="text-[9px] text-rose-500 font-extrabold leading-none shrink-0">★${count}</span>` : ''}
             </div>
           </div>
         `;
@@ -884,8 +909,14 @@
       let prayerCount = 0;
       let healthCount = 0;
 
+      const currentMonthPrefix = `${memberId}_${calendarYear}-${String(calendarMonth).padStart(2, '0')}`;
+
       Object.keys(records).forEach(key => {
-        if (key.startsWith(`${memberId}_2026-11`)) {
+        const matchesFilter = (rankingMode === 'all')
+          ? key.startsWith(`${memberId}_`)
+          : key.startsWith(currentMonthPrefix);
+
+        if (matchesFilter) {
           const rec = records[key];
           if (rec.word) wordCount++;
           if (rec.meditation) meditationCount++;
@@ -1314,6 +1345,16 @@
       renderCalendar();
       updateCheckPanel();
       initFirebaseSync();
+
+      // 한줄 묵상 입력란에서 엔터키 입력 시 자동 저장
+      const noteInput = document.getElementById('dailyNoteInput');
+      if (noteInput) {
+        noteInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            saveDailyNote();
+          }
+        });
+      }
     };
   </script>
 </body>
