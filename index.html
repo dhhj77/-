@@ -12,6 +12,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Firebase SDK (v9 compat for easy drop-in) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
@@ -89,9 +92,9 @@
             <p class="text-[11px] text-rose-500 font-medium">3분 말씀 · 성경묵상 · 기도 · 건강</p>
           </div>
         </div>
-        <div class="flex items-center space-x-1.5 bg-rose-50 border border-rose-200/70 px-2.5 py-1 rounded-full shrink-0 shadow-sm">
-          <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
-          <span class="text-[10px] text-rose-600 font-semibold tracking-tight">마스터 온 ON</span>
+        <div id="cloudSyncStatus" class="flex items-center space-x-1.5 bg-rose-50 border border-rose-200/70 px-2.5 py-1 rounded-full shrink-0 shadow-sm" title="클라우드 실시간 동기화 상태">
+          <span id="cloudSyncDot" class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+          <span id="cloudSyncText" class="text-[10px] text-rose-600 font-semibold tracking-tight">클라우드 연결중...</span>
         </div>
       </div>
 
@@ -533,6 +536,43 @@
       }
     ];
 
+    // --- Firebase Initialization & Firestore Setup ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBk5ziJGreysfNjTW32a96zRFqSFGNyWw",
+      authDomain: "region-2-540a3.firebaseapp.com",
+      projectId: "region-2-540a3",
+      storageBucket: "region-2-540a3.firebasestorage.app",
+      messagingSenderId: "659352140735",
+      appId: "1:659352140735:web:91866726ff6b0a95683f0a"
+    };
+
+    let db = null;
+    let isCloudConnected = false;
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      }
+    } catch (e) {
+      console.warn("Firebase initialization warning:", e);
+    }
+
+    function setCloudStatus(connected, message) {
+      const dot = document.getElementById('cloudSyncDot');
+      const text = document.getElementById('cloudSyncText');
+      if (!dot || !text) return;
+      isCloudConnected = connected;
+      if (connected) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        text.className = "text-[10px] text-emerald-700 font-semibold tracking-tight";
+        text.innerText = message || "클라우드 동기화 완료 ✨";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        text.className = "text-[10px] text-amber-700 font-semibold tracking-tight";
+        text.innerText = message || "로컬 모드";
+      }
+    }
+
     const DATA_VERSION = 'v5_pastel_redesign';
     if (localStorage.getItem('habit_data_version') !== DATA_VERSION) {
       localStorage.setItem('habit_members', JSON.stringify(DEFAULT_MEMBERS));
@@ -554,10 +594,67 @@
     let rankingMode = 'monthly';
 
     function saveStorage() {
+      // 1. LocalStorage 저장 (오프라인 캐시)
       localStorage.setItem('habit_members', JSON.stringify(members));
       localStorage.setItem('habit_records', JSON.stringify(records));
       localStorage.setItem('habit_posts', JSON.stringify(posts));
       localStorage.setItem('habit_currentUserId', currentUserId);
+
+      // 2. Firebase Firestore 클라우드 동기화
+      if (db) {
+        db.collection('habit_app').doc('main_data').set({
+          members: members,
+          records: records,
+          posts: posts,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => {
+          setCloudStatus(true, "클라우드 동기화 완료 ✨");
+        }).catch(err => {
+          console.warn("Firestore save error:", err);
+          setCloudStatus(false, "클라우드 저장 대기중");
+        });
+      }
+    }
+
+    // Firestore 실시간 구독 (모든 기기/사용자간 실시간 자동 업데이트)
+    function initFirebaseSync() {
+      if (!db) {
+        setCloudStatus(false, "로컬 모드");
+        return;
+      }
+      setCloudStatus(false, "동기화 연결중...");
+      db.collection('habit_app').doc('main_data').onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.members && Array.isArray(data.members) && data.members.length > 0) {
+            members = data.members;
+            localStorage.setItem('habit_members', JSON.stringify(members));
+          }
+          if (data.records) {
+            records = data.records;
+            localStorage.setItem('habit_records', JSON.stringify(records));
+          }
+          if (data.posts && Array.isArray(data.posts)) {
+            posts = data.posts;
+            localStorage.setItem('habit_posts', JSON.stringify(posts));
+          }
+          setCloudStatus(true, "실시간 클라우드 연결됨 ☁️");
+          updateHeaderUser();
+          renderCalendar();
+          updateCheckPanel();
+          const currentTab = document.querySelector('.tab-btn.bg-rose-400')?.id?.replace('tabBtn-', '') || 'habits';
+          if (currentTab === 'ranking') renderLeaderboard();
+          if (currentTab === 'report') renderReport();
+          if (currentTab === 'board') renderBoard();
+        } else {
+          // 문서가 없으면 초기 데이터로 생성
+          saveStorage();
+          setCloudStatus(true, "초기 클라우드 등록 완료 ✨");
+        }
+      }, (error) => {
+        console.warn("Firestore sync error:", error);
+        setCloudStatus(false, "Firestore 규칙 확인 필요");
+      });
     }
 
     function showToast(message, icon = '🌸') {
@@ -1216,6 +1313,7 @@
       updateHeaderUser();
       renderCalendar();
       updateCheckPanel();
+      initFirebaseSync();
     };
   </script>
 </body>
