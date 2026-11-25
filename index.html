@@ -141,6 +141,33 @@
       <!-- ================= TAB 1: 신앙습관 (HABITS) ================= -->
       <section id="view-habits" class="space-y-3.5">
         
+        <!-- Upcoming Events / Schedules Card (가장 최근에 벌어질 일정 안내) -->
+        <div class="bg-gradient-to-br from-white via-[#FFFBF9] to-[#FFF5F2] rounded-3xl p-4 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-rose-100/80 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-2xl bg-rose-100 text-rose-500 flex items-center justify-center text-sm shadow-sm">
+                🔔
+              </span>
+              <div>
+                <h3 class="text-xs font-extrabold text-stone-800 flex items-center gap-1.5">
+                  <span>다가오는 최근 일정</span>
+                  <span id="scheduleCountBadge" class="bg-rose-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold leading-normal">0</span>
+                </h3>
+                <p class="text-[10px] text-stone-400">나와 구역의 가장 가까운 일정 알림</p>
+              </div>
+            </div>
+            <button onclick="openScheduleModal()" class="flex items-center gap-1 text-[11px] font-bold text-rose-500 bg-white hover:bg-rose-50 active:scale-95 border border-rose-200/80 px-2.5 py-1.5 rounded-2xl shadow-sm transition">
+              <span>➕</span>
+              <span>일정 등록</span>
+            </button>
+          </div>
+
+          <!-- Schedule List Container -->
+          <div id="upcomingScheduleList" class="space-y-2">
+            <!-- Dynamically populated upcoming events -->
+          </div>
+        </div>
+
         <!-- Pastel Calendar Card -->
         <div class="bg-white rounded-3xl p-3.5 shadow-[0_4px_20px_-4px_rgba(235,214,204,0.45)] border border-[#F3E8E1]">
           <!-- Calendar Header -->
@@ -487,6 +514,66 @@
       </div>
     </div>
 
+    <!-- Modal: Add / Manage Schedule (일정 등록 모달) -->
+    <div id="scheduleModal" class="hidden fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white border border-stone-200 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-2 border-b border-stone-100">
+          <h3 class="text-sm font-extrabold text-stone-800 flex items-center gap-1.5">
+            <span>📅</span> 일정 등록하기
+          </h3>
+          <button onclick="closeScheduleModal()" class="text-stone-400 hover:text-stone-700 p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-[11px] font-semibold text-stone-600 block mb-1">일정 구분</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 p-2 rounded-2xl border border-rose-200 bg-rose-50/50 cursor-pointer">
+                <input type="radio" name="scheduleScope" value="mine" checked class="text-rose-500 focus:ring-rose-400" />
+                <span class="text-xs font-bold text-stone-700">개인 일정 (나만 보기)</span>
+              </label>
+              <label class="flex items-center gap-2 p-2 rounded-2xl border border-stone-200 bg-stone-50 cursor-pointer">
+                <input type="radio" name="scheduleScope" value="all" class="text-rose-500 focus:ring-rose-400" />
+                <span class="text-xs font-bold text-stone-700">구역 전체 일정</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-semibold text-stone-600 block mb-1">일정 제목 <span class="text-rose-500">*</span></label>
+            <input type="text" id="scheduleTitleInput" placeholder="예: 구역 모임, 심방, 주일예배, 성경공부" class="w-full bg-[#FAF5F0] border border-stone-200 text-xs rounded-2xl p-2.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] font-semibold text-stone-600 block mb-1">날짜 <span class="text-rose-500">*</span></label>
+              <input type="date" id="scheduleDateInput" class="w-full bg-[#FAF5F0] border border-stone-200 text-xs rounded-2xl p-2.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-stone-600 block mb-1">시간 (선택)</label>
+              <input type="time" id="scheduleTimeInput" class="w-full bg-[#FAF5F0] border border-stone-200 text-xs rounded-2xl p-2.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-semibold text-stone-600 block mb-1">장소 / 메모 (선택)</label>
+            <input type="text" id="schedulePlaceInput" placeholder="예: 본당 2층, 곽도현 성도 가정, 온라인 줌" class="w-full bg-[#FAF5F0] border border-stone-200 text-xs rounded-2xl p-2.5 text-stone-700 focus:outline-none focus:border-rose-300" />
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button onclick="closeScheduleModal()" class="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-600 font-medium text-xs py-2.5 rounded-2xl transition">
+            취소
+          </button>
+          <button onclick="addNewSchedule()" class="flex-1 bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-bold py-2.5 rounded-2xl shadow-sm transition">
+            일정 등록 완료
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification Overlay -->
     <div id="toastNotification" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 custom-toast bg-stone-800/90 backdrop-blur-md text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2">
       <span id="toastIcon">🌸</span>
@@ -537,6 +624,39 @@
       }
     ];
 
+    const DEFAULT_SCHEDULES = [
+      {
+        id: 'sch_1',
+        title: '수요 예배 및 구역 기도회',
+        date: '2026-11-25',
+        time: '19:30',
+        place: '본당 대예배실',
+        scope: 'all',
+        author: '곽도현',
+        creatorId: 'm_kwak'
+      },
+      {
+        id: 'sch_2',
+        title: '금요 성령 대망 기도회',
+        date: '2026-11-27',
+        time: '20:00',
+        place: '은혜성전',
+        scope: 'all',
+        author: '김가현',
+        creatorId: 'm_kim_gh'
+      },
+      {
+        id: 'sch_3',
+        title: '2지역 주일 연합 구역예배',
+        date: '2026-11-29',
+        time: '13:30',
+        place: '3층 소예배실',
+        scope: 'all',
+        author: '곽도현',
+        creatorId: 'm_kwak'
+      }
+    ];
+
     // --- Firebase Initialization & Firestore Setup ---
     const firebaseConfig = {
       apiKey: "AIzaSyDBk5ziJGreysfNjTW32a96zRFqSFGNyWw",
@@ -581,11 +701,12 @@
       }
     }
 
-    const DATA_VERSION = 'v5_pastel_redesign';
+    const DATA_VERSION = 'v6_schedule_support';
     if (localStorage.getItem('habit_data_version') !== DATA_VERSION) {
       localStorage.setItem('habit_members', JSON.stringify(DEFAULT_MEMBERS));
       localStorage.setItem('habit_records', JSON.stringify(DEFAULT_RECORDS));
       localStorage.setItem('habit_posts', JSON.stringify(DEFAULT_POSTS));
+      localStorage.setItem('habit_schedules', JSON.stringify(DEFAULT_SCHEDULES));
       localStorage.setItem('habit_currentUserId', 'm_kwak');
       localStorage.setItem('habit_data_version', DATA_VERSION);
     }
@@ -593,6 +714,7 @@
     let members = JSON.parse(localStorage.getItem('habit_members')) || DEFAULT_MEMBERS;
     let records = JSON.parse(localStorage.getItem('habit_records')) || DEFAULT_RECORDS;
     let posts = JSON.parse(localStorage.getItem('habit_posts')) || DEFAULT_POSTS;
+    let schedules = JSON.parse(localStorage.getItem('habit_schedules')) || DEFAULT_SCHEDULES;
 
     let currentUserId = localStorage.getItem('habit_currentUserId') || 'm_kwak';
     let targetMemberId = currentUserId;
@@ -614,6 +736,7 @@
       localStorage.setItem('habit_members', JSON.stringify(members));
       localStorage.setItem('habit_records', JSON.stringify(records));
       localStorage.setItem('habit_posts', JSON.stringify(posts));
+      localStorage.setItem('habit_schedules', JSON.stringify(schedules));
       localStorage.setItem('habit_currentUserId', currentUserId);
 
       // 2. Firebase Firestore 클라우드 안전 전송 (병합 merge: true 로 누락 방지)
@@ -625,6 +748,7 @@
             members: members,
             records: records,
             posts: posts,
+            schedules: schedules,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true }).then(() => {
             setCloudStatus(true, "클라우드 저장 완료 ✨");
@@ -662,10 +786,15 @@
             posts = data.posts;
             localStorage.setItem('habit_posts', JSON.stringify(posts));
           }
+          if (data.schedules && Array.isArray(data.schedules)) {
+            schedules = data.schedules;
+            localStorage.setItem('habit_schedules', JSON.stringify(schedules));
+          }
           setCloudStatus(true, "실시간 클라우드 연결됨 ☁️");
           updateHeaderUser();
           renderCalendar();
           updateCheckPanel();
+          renderUpcomingSchedules();
           const currentTab = document.querySelector('.tab-btn.bg-rose-400')?.id?.replace('tabBtn-', '') || 'habits';
           if (currentTab === 'ranking') renderLeaderboard();
           if (currentTab === 'report') renderReport();
@@ -741,7 +870,199 @@
       document.getElementById('checkPanelTargetName').innerText = getTargetMember().name;
       renderCalendar();
       updateCheckPanel();
+      renderUpcomingSchedules();
       showToast(`${getTargetMember().name}님의 기록으로 전환되었습니다.`, '🐰');
+    }
+
+    // --- Upcoming Schedules & Events Logic (최근 일정 관리) ---
+    function openScheduleModal() {
+      document.getElementById('scheduleTitleInput').value = '';
+      document.getElementById('scheduleDateInput').value = selectedDate || _todayKey;
+      document.getElementById('scheduleTimeInput').value = '';
+      document.getElementById('schedulePlaceInput').value = '';
+      
+      const mineRadio = document.querySelector('input[name="scheduleScope"][value="mine"]');
+      if (mineRadio) mineRadio.checked = true;
+
+      document.getElementById('scheduleModal').classList.remove('hidden');
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('scheduleModal').classList.add('hidden');
+    }
+
+    function addNewSchedule() {
+      const title = document.getElementById('scheduleTitleInput').value.trim();
+      const date = document.getElementById('scheduleDateInput').value;
+      const time = document.getElementById('scheduleTimeInput').value.trim();
+      const place = document.getElementById('schedulePlaceInput').value.trim();
+      const scopeRadio = document.querySelector('input[name="scheduleScope"]:checked');
+      const scope = scopeRadio ? scopeRadio.value : 'mine';
+
+      if (!title) {
+        showToast('일정 제목을 입력해주세요.', '⚠️');
+        return;
+      }
+      if (!date) {
+        showToast('일정 날짜를 선택해주세요.', '⚠️');
+        return;
+      }
+
+      const u = getCurrentUser();
+      const newSchedule = {
+        id: 'sch_' + Date.now(),
+        title,
+        date,
+        time,
+        place,
+        scope, // 'mine' (개인) 또는 'all' (전체)
+        author: u.name,
+        creatorId: u.id,
+        createdAt: new Date().toISOString()
+      };
+
+      schedules.push(newSchedule);
+      saveStorage();
+      closeScheduleModal();
+      renderUpcomingSchedules();
+      renderCalendar();
+      showToast('새 일정이 등록되었습니다 📅', '✨');
+    }
+
+    function deleteSchedule(schId) {
+      const sch = schedules.find(s => s.id === schId);
+      if (!sch) return;
+
+      const u = getCurrentUser();
+      if (sch.creatorId !== u.id && u.role !== '관리자') {
+        showToast('작성자 또는 관리자만 일정을 삭제할 수 있습니다.', '🔒');
+        return;
+      }
+
+      schedules = schedules.filter(s => s.id !== schId);
+      saveStorage();
+      renderUpcomingSchedules();
+      renderCalendar();
+      showToast('일정이 삭제되었습니다.', '🗑️');
+    }
+
+    function getDDayString(targetDateStr) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const [y, m, d] = targetDateStr.split('-').map(Number);
+      const target = new Date(y, m - 1, d);
+      target.setHours(0, 0, 0, 0);
+
+      const diffTime = target.getTime() - today.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return { text: 'D-Day 오늘', isUrgent: true, isPast: false };
+      if (diffDays === 1) return { text: 'D-1 내일', isUrgent: true, isPast: false };
+      if (diffDays === 2) return { text: 'D-2 모레', isUrgent: true, isPast: false };
+      if (diffDays > 0) return { text: `D-${diffDays}`, isUrgent: false, isPast: false };
+      return { text: `${Math.abs(diffDays)}일 전`, isUrgent: false, isPast: true };
+    }
+
+    function renderUpcomingSchedules() {
+      const listEl = document.getElementById('upcomingScheduleList');
+      const badgeEl = document.getElementById('scheduleCountBadge');
+      if (!listEl) return;
+
+      const u = getCurrentUser();
+
+      // 현재 사용자가 볼 수 있는 일정 필터링: (전체 구역 일정 OR 내가 등록한 개인 일정)
+      const visible = schedules.filter(s => s.scope === 'all' || s.creatorId === u.id);
+
+      // 날짜 및 시간 오름차순 정렬 (가장 최근에 벌어질 일정 우선)
+      visible.sort((a, b) => {
+        const dateTimeA = `${a.date} ${a.time || '00:00'}`;
+        const dateTimeB = `${b.date} ${b.time || '00:00'}`;
+        return dateTimeA.localeCompare(dateTimeB);
+      });
+
+      // 오늘 이후(오늘 포함) 다가오는 일정 우선 추출
+      const todayStr = _todayKey;
+      const upcoming = visible.filter(s => s.date >= todayStr);
+      const past = visible.filter(s => s.date < todayStr);
+
+      // 표시 대상: 다가오는 일정 먼저, 부족하면 최근 지난 일정 표시 (최대 4개)
+      const displayList = upcoming.concat(past).slice(0, 4);
+
+      if (badgeEl) {
+        badgeEl.innerText = upcoming.length;
+      }
+
+      if (displayList.length === 0) {
+        listEl.innerHTML = `
+          <div class="py-5 text-center text-xs text-stone-400 bg-white/70 rounded-2xl border border-dashed border-rose-200/80">
+            등록된 최근 일정이 없습니다.<br>
+            <button onclick="openScheduleModal()" class="mt-1.5 text-[11px] font-bold text-rose-500 underline">
+              + 새 일정 등록하기
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      displayList.forEach(item => {
+        const dday = getDDayString(item.date);
+        const isMine = (item.scope === 'mine');
+        const canDelete = (item.creatorId === u.id || u.role === '관리자');
+
+        const [y, m, d] = item.date.split('-');
+        const formattedDate = `${Number(m)}월 ${Number(d)}일`;
+
+        const card = document.createElement('div');
+        card.className = `flex items-center justify-between p-2.5 rounded-2xl border transition shadow-sm ${
+          dday.isUrgent 
+            ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-200' 
+            : dday.isPast 
+              ? 'bg-stone-50/70 border-stone-200 opacity-60' 
+              : 'bg-white border-rose-100 hover:border-rose-200'
+        }`;
+
+        let ddayBadgeClass = 'bg-stone-100 text-stone-600';
+        if (dday.isUrgent) ddayBadgeClass = 'bg-rose-500 text-white animate-pulse';
+        else if (!dday.isPast) ddayBadgeClass = 'bg-rose-100 text-rose-600 font-bold';
+
+        card.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${ddayBadgeClass}">
+              ${dday.text}
+            </span>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-stone-800 truncate">${item.title}</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded-md font-semibold shrink-0 ${
+                  isMine ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-700'
+                }">
+                  ${isMine ? '개인' : '구역'}
+                </span>
+              </div>
+              <div class="flex items-center gap-2 text-[10px] text-stone-400 mt-0.5 truncate">
+                <span>📅 ${formattedDate}</span>
+                ${item.time ? `<span>⏰ ${item.time}</span>` : ''}
+                ${item.place ? `<span class="truncate">📍 ${item.place}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0 ml-2">
+            <button onclick="selectedDate = '${item.date}'; renderCalendar(); updateCheckPanel();" class="text-[10px] text-stone-500 hover:text-rose-500 font-semibold bg-white border border-stone-200 px-2 py-1 rounded-xl transition shadow-xs">
+              달력보기
+            </button>
+            ${canDelete ? `
+              <button onclick="deleteSchedule('${item.id}')" class="text-stone-300 hover:text-rose-500 p-1 transition" title="일정 삭제">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+
+      lucide.createIcons();
     }
 
     // --- Calendar Generation ---
@@ -771,6 +1092,10 @@
 
         const count = (record.word ? 1 : 0) + (record.meditation ? 1 : 0) + (record.prayer ? 1 : 0) + (record.health ? 1 : 0);
 
+        // 해당 날짜에 일정이 있는지 확인 (전체 일정 또는 나의 개인 일정)
+        const u = getCurrentUser();
+        const hasDateSchedule = schedules.some(s => s.date === dateKey && (s.scope === 'all' || s.creatorId === u.id));
+
         const dayCol = (firstDayIndex + day - 1) % 7;
         let dayColor = "text-stone-700";
         if (dayCol === 0) dayColor = "text-rose-500 font-bold";
@@ -793,7 +1118,10 @@
 
         let topBarHtml = `
           <div class="flex items-center justify-between text-[11px] font-bold ${dayColor} px-1">
-            <span class="text-xs">${day}</span>
+            <span class="text-xs flex items-center gap-0.5">
+              <span>${day}</span>
+              ${hasDateSchedule ? `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" title="등록된 일정이 있습니다"></span>` : ''}
+            </span>
             <div class="flex items-center gap-1 shrink-0 overflow-hidden">
               ${isToday ? `<span class="today-badge-blink whitespace-nowrap bg-rose-400 text-white text-[8.5px] px-1 py-0.2 rounded-full font-bold shadow-sm inline-block leading-tight">오늘</span>` : ''}
               ${count > 0 ? `<span class="text-[9px] text-rose-500 font-extrabold leading-none shrink-0">★${count}</span>` : ''}
@@ -1330,6 +1658,7 @@
       updateHeaderUser();
       renderCalendar();
       updateCheckPanel();
+      renderUpcomingSchedules();
       showToast(`${user.name}님 환영합니다! 🌷`, '🐰');
     }
 
@@ -1344,6 +1673,7 @@
       updateHeaderUser();
       renderCalendar();
       updateCheckPanel();
+      renderUpcomingSchedules();
       initFirebaseSync();
 
       // 한줄 묵상 입력란에서 엔터키 입력 시 자동 저장
